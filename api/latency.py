@@ -27,21 +27,18 @@ class handler(BaseHTTPRequestHandler):
                 result[region] = {"avg_latency": None, "p95_latency": None, "avg_uptime": None, "breaches": 0}
                 continue
             latencies = [r["latency_ms"] for r in records]
-            uptimes   = [r["uptime_pct"]  for r in records]
+            uptimes = [r["uptime_pct"] for r in records]
             result[region] = {
                 "avg_latency": round(float(np.mean(latencies)), 4),
                 "p95_latency": round(float(np.percentile(latencies, 95)), 4),
-                "avg_uptime":  round(float(np.mean(uptimes)), 4),
-                "breaches":    int(sum(1 for l in latencies if l > threshold_ms))
+                "avg_uptime": round(float(np.mean(uptimes)), 4),
+                "breaches": int(sum(1 for l in latencies if l > threshold_ms))
             }
 
         response = json.dumps(result).encode()
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(response)))
         self.end_headers()
         self.wfile.write(response)
-
