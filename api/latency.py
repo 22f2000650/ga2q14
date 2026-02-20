@@ -15,7 +15,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load telemetry data from the bundled JSON file
 DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "telemetry.json")
 
 def load_data():
@@ -34,12 +33,7 @@ async def latency(request: Request):
     for region in regions:
         records = [r for r in all_data if r["region"] == region]
         if not records:
-            result[region] = {
-                "avg_latency": None,
-                "p95_latency": None,
-                "avg_uptime": None,
-                "breaches": 0
-            }
+            result[region] = {"avg_latency": None, "p95_latency": None, "avg_uptime": None, "breaches": 0}
             continue
 
         latencies = [r["latency_ms"] for r in records]
@@ -52,4 +46,22 @@ async def latency(request: Request):
             "breaches": int(sum(1 for l in latencies if l > threshold_ms))
         }
 
-    return JSONResponse(content=result)
+    return JSONResponse(
+        content=result,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+        }
+    )
+
+@app.options("/api/latency")
+async def latency_options():
+    return JSONResponse(
+        content={},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+        }
+    )
